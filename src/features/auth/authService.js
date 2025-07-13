@@ -1,4 +1,4 @@
-// src/redux/auth/authService.js
+
 import axios from "axios";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace(/\/+$/, "") || "https://think-box-backend.vercel.app/api/auth";
