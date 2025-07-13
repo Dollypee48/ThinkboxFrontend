@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 
-const API_BASE_URL = "https://think-box-backend.vercel.app";
+const API_BASE_URL = "https://think-box-backend.vercel.app/api/auth";
 
 export default function Register() {
   const [form, setForm] = useState({
