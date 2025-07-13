@@ -37,7 +37,7 @@ export default function Register() {
 
     try {
       setLoading(true);
-      const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}register`, userData);
+      const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/register`, userData);
       localStorage.setItem("user", JSON.stringify(res.data));
       navigate("/dashboard");
     } catch (err) {
