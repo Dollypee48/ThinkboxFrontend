@@ -1,7 +1,8 @@
 // src/redux/auth/authService.js
 import axios from "axios";
 
-const API_URL = "http://localhost:5000/api/auth/";
+// Use environment variable OR fallback to live URL
+const API_URL = import.meta.env.VITE_API_BASE_URL || "https://think-box-backend.vercel.app/api/auth/";
 
 const register = async (userData) => {
   const res = await axios.post(API_URL + "register", userData);
