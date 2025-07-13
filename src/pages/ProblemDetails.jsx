@@ -1,23 +1,26 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
+import { useProblem } from "../context/ProblemContext";
 import ExportPDF from "../components/ExportPDF";
-
-const API_BASE_URL = "https://think-box-backend.vercel.app";
 
 export default function ProblemDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const endOfNotesRef = useRef(null);
 
+  const {
+    getProblemById,
+    updateProblem,
+    deleteProblem,
+    addNoteToProblem,
+    editNoteOnProblem,
+    deleteNoteFromProblem,
+  } = useProblem();
+
   const [problem, setProblem] = useState(null);
   const [notes, setNotes] = useState([]);
   const [newNote, setNewNote] = useState("");
-  const [editForm, setEditForm] = useState({
-    title: "",
-    description: "",
-    category: "Personal",
-  });
+  const [editForm, setEditForm] = useState({ title: "", description: "", category: "Personal" });
   const [editMode, setEditMode] = useState(false);
   const [loading, setLoading] = useState(true);
   const [editingNoteId, setEditingNoteId] = useState(null);
@@ -25,28 +28,21 @@ export default function ProblemDetails() {
 
   useEffect(() => {
     const fetchProblem = async () => {
-      try {
-        const user = JSON.parse(localStorage.getItem("user"));
-        const res = await axios.get(`${API_BASE_URL}/api/problems`, {
-          headers: { Authorization: `Bearer ${user.token}` },
-        });
-        const found = res.data.find((p) => p._id === id);
-        if (!found) return setProblem(null);
-        setProblem(found);
-        setNotes(found.notes || []);
-        setEditForm({
-          title: found.title,
-          description: found.description,
-          category: found.category,
-        });
-      } catch (err) {
-        console.error("Error fetching:", err);
-      } finally {
-        setLoading(false);
-      }
+      setLoading(true);
+      const data = await getProblemById(id);
+      if (!data) return setProblem(null);
+      setProblem(data);
+      setNotes(data.notes || []);
+      setEditForm({
+        title: data.title,
+        description: data.description,
+        category: data.category,
+      });
+      setLoading(false);
     };
+
     fetchProblem();
-  }, [id]);
+  }, [id, getProblemById]);
 
   useEffect(() => {
     if (notes.length > 0) {
@@ -55,84 +51,34 @@ export default function ProblemDetails() {
   }, [notes]);
 
   const handleSaveEdit = async () => {
-    try {
-      const user = JSON.parse(localStorage.getItem("user"));
-      const res = await axios.put(
-        `${API_BASE_URL}/api/problems/${id}/edit`,
-        editForm,
-        {
-          headers: { Authorization: `Bearer ${user.token}` },
-        }
-      );
-      setProblem(res.data);
-      setEditMode(false);
-    } catch (err) {
-      console.error("Error saving edits:", err);
-    }
+    const updated = await updateProblem(id, editForm);
+    setProblem(updated);
+    setEditMode(false);
   };
 
   const handleDelete = async () => {
-    if (!window.confirm("Are you sure you want to delete this problem?")) return;
-    try {
-      const user = JSON.parse(localStorage.getItem("user"));
-      await axios.delete(`${API_BASE_URL}/api/problems/${id}`, {
-        headers: { Authorization: `Bearer ${user.token}` },
-      });
-      navigate("/problems");
-    } catch (err) {
-      console.error("Error deleting problem:", err);
-    }
+    if (!window.confirm("Delete this problem?")) return;
+    await deleteProblem(id);
+    navigate("/problems");
   };
 
   const handleAddNote = async () => {
     if (!newNote.trim()) return;
-    try {
-      const user = JSON.parse(localStorage.getItem("user"));
-      const res = await axios.post(
-        `${API_BASE_URL}/api/problems/${id}/notes`,
-        { text: newNote },
-        {
-          headers: { Authorization: `Bearer ${user.token}` },
-        }
-      );
-      setNotes(res.data);
-      setNewNote("");
-    } catch (err) {
-      console.error("Error adding note:", err);
-    }
+    const updatedNotes = await addNoteToProblem(id, newNote);
+    setNotes(updatedNotes);
+    setNewNote("");
   };
 
   const handleEditNote = async (noteId) => {
-    try {
-      const user = JSON.parse(localStorage.getItem("user"));
-      const res = await axios.put(
-        `${API_BASE_URL}/api/problems/${id}/notes/${noteId}`,
-        { text: editingText },
-        {
-          headers: { Authorization: `Bearer ${user.token}` },
-        }
-      );
-      setNotes(res.data);
-      setEditingNoteId(null);
-      setEditingText("");
-    } catch (err) {
-      console.error("Error updating note:", err);
-    }
+    const updatedNotes = await editNoteOnProblem(id, noteId, editingText);
+    setNotes(updatedNotes);
+    setEditingNoteId(null);
+    setEditingText("");
   };
 
   const handleDeleteNote = async (noteId) => {
-    try {
-      const user = JSON.parse(localStorage.getItem("user"));
-      const res = await axios.delete(
-        `${API_BASE_URL}/api/problems/${id}/notes/${noteId}`,
-        {
-          headers: { Authorization: `Bearer ${user.token}` },
-        }
-      );
-      setNotes(res.data);
-    } catch (err) {
-      console.error("Error deleting note:", err);
-    }
+    const updatedNotes = await deleteNoteFromProblem(id, noteId);
+    setNotes(updatedNotes);
   };
 
   if (loading) return <p className="text-center py-20">Loading...</p>;
@@ -153,26 +99,18 @@ export default function ProblemDetails() {
             <input
               className="w-full border p-2 rounded"
               value={editForm.title}
-              onChange={(e) =>
-                setEditForm({ ...editForm, title: e.target.value })
-              }
-              placeholder="Problem Title"
+              onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
             />
             <textarea
               className="w-full border p-2 rounded"
               rows={4}
               value={editForm.description}
-              onChange={(e) =>
-                setEditForm({ ...editForm, description: e.target.value })
-              }
-              placeholder="Description"
+              onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
             />
             <select
               className="w-full border p-2 rounded"
               value={editForm.category}
-              onChange={(e) =>
-                setEditForm({ ...editForm, category: e.target.value })
-              }
+              onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
             >
               <option>Personal</option>
               <option>Academic</option>
@@ -180,16 +118,10 @@ export default function ProblemDetails() {
               <option>Other</option>
             </select>
             <div className="space-x-2 mt-2">
-              <button
-                onClick={handleSaveEdit}
-                className="bg-green-600 text-white px-4 py-2 rounded"
-              >
+              <button onClick={handleSaveEdit} className="bg-green-600 text-white px-4 py-2 rounded">
                 Save
               </button>
-              <button
-                onClick={() => setEditMode(false)}
-                className="border px-4 py-2 rounded"
-              >
+              <button onClick={() => setEditMode(false)} className="border px-4 py-2 rounded">
                 Cancel
               </button>
             </div>
@@ -200,16 +132,10 @@ export default function ProblemDetails() {
             <p className="text-gray-500">Category: {problem.category}</p>
             <p className="text-gray-700">{problem.description}</p>
             <div className="mt-4 space-x-2">
-              <button
-                onClick={() => setEditMode(true)}
-                className="bg-yellow-500 text-white px-4 py-1 rounded"
-              >
+              <button onClick={() => setEditMode(true)} className="bg-yellow-500 text-white px-4 py-1 rounded">
                 Edit
               </button>
-              <button
-                onClick={handleDelete}
-                className="bg-red-600 text-white px-4 py-1 rounded"
-              >
+              <button onClick={handleDelete} className="bg-red-600 text-white px-4 py-1 rounded">
                 Delete
               </button>
             </div>
@@ -227,10 +153,7 @@ export default function ProblemDetails() {
           value={newNote}
           onChange={(e) => setNewNote(e.target.value)}
         />
-        <button
-          onClick={handleAddNote}
-          className="bg-blue-600 text-white px-4 py-2 rounded mb-6"
-        >
+        <button onClick={handleAddNote} className="bg-blue-600 text-white px-4 py-2 rounded mb-6">
           Add Note
         </button>
 
@@ -249,10 +172,7 @@ export default function ProblemDetails() {
                       rows={3}
                     />
                     <div className="space-x-2">
-                      <button
-                        onClick={() => handleEditNote(note._id)}
-                        className="bg-green-600 text-white px-3 py-1 rounded"
-                      >
+                      <button onClick={() => handleEditNote(note._id)} className="bg-green-600 text-white px-3 py-1 rounded">
                         Save
                       </button>
                       <button
@@ -268,9 +188,7 @@ export default function ProblemDetails() {
                   </>
                 ) : (
                   <div className="flex justify-between items-start gap-2">
-                    <p className="text-gray-800 flex-1 whitespace-pre-line">
-                      {note.text}
-                    </p>
+                    <p className="text-gray-800 flex-1 whitespace-pre-line">{note.text}</p>
                     <div className="space-x-2">
                       <button
                         onClick={() => {
@@ -281,10 +199,7 @@ export default function ProblemDetails() {
                       >
                         Edit
                       </button>
-                      <button
-                        onClick={() => handleDeleteNote(note._id)}
-                        className="text-red-600 font-medium"
-                      >
+                      <button onClick={() => handleDeleteNote(note._id)} className="text-red-600 font-medium">
                         Delete
                       </button>
                     </div>

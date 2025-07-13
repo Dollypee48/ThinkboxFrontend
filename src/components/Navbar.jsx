@@ -1,30 +1,20 @@
 import { Link, useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
-import { logout, resetAuthState } from "../features/auth/authSlice";
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useAuth } from "../context/AuthContext";
 import { HiMenu, HiX } from "react-icons/hi";
 
 export default function Navbar() {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
-  const { user } = useSelector((state) => state.auth);
+  const { user, logout } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
 
-  // Sync user from localStorage on mount
-  useEffect(() => {
-    const storedUser = JSON.parse(localStorage.getItem("user"));
-    if (storedUser && !user) {
-      dispatch({ type: "auth/setUser", payload: storedUser });
-    }
-  }, [dispatch, user]);
-
   const handleLogout = () => {
-    dispatch(logout());
-    dispatch(resetAuthState());
+    logout();
     navigate("/");
+    setMenuOpen(false);
   };
 
-  const toggleMenu = () => setMenuOpen(!menuOpen);
+  const toggleMenu = () => setMenuOpen((prev) => !prev);
 
   return (
     <nav className="sticky top-0 z-50 bg-white shadow-md px-6 py-4">
@@ -39,7 +29,13 @@ export default function Navbar() {
           </button>
         </div>
 
-        <div className={`md:flex items-center space-x-4 ${menuOpen ? "block absolute top-16 left-0 right-0 bg-white shadow-md p-4" : "hidden md:flex"}`}>
+        <div
+          className={`${
+            menuOpen
+              ? "block absolute top-16 left-0 right-0 bg-white shadow-md p-4 space-y-4 md:space-y-0 md:space-x-4 md:flex"
+              : "hidden md:flex items-center space-x-4"
+          }`}
+        >
           {user ? (
             <>
               <Link to="/dashboard" className="nav-link" onClick={toggleMenu}>
@@ -51,7 +47,10 @@ export default function Navbar() {
               <Link to="/problems" className="nav-link" onClick={toggleMenu}>
                 My Problems
               </Link>
-              <button onClick={handleLogout} className="nav-button bg-red-500 hover:bg-red-600">
+              <button
+                onClick={handleLogout}
+                className="nav-button bg-red-500 hover:bg-red-600"
+              >
                 Logout
               </button>
             </>
@@ -60,7 +59,11 @@ export default function Navbar() {
               <Link to="/login" className="nav-link" onClick={toggleMenu}>
                 Login
               </Link>
-              <Link to="/register" className="nav-button bg-purple-600 hover:bg-purple-700">
+              <Link
+                to="/register"
+                className="nav-button bg-purple-600 hover:bg-purple-700"
+                onClick={toggleMenu}
+              >
                 Get Started
               </Link>
             </>
