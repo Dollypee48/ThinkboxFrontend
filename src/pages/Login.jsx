@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 
+const API_BASE_URL = "https://think-box-backend.vercel.app";
+
 export default function Login() {
   const [form, setForm] = useState({ email: "", password: "", showPassword: false });
   const [loading, setLoading] = useState(false);
@@ -17,7 +19,7 @@ export default function Login() {
 
     try {
       setLoading(true);
-      const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/login`, {
+      const res = await axios.post(`${API_BASE_URL}/login`, {
         email: form.email.trim(),
         password: form.password,
       });

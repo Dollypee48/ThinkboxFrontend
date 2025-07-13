@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 
+const API_BASE_URL = "https://think-box-backend.vercel.app";
+
 export default function Register() {
   const [form, setForm] = useState({
     firstName: "",
@@ -37,7 +39,7 @@ export default function Register() {
 
     try {
       setLoading(true);
-      const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/register`, userData);
+      const res = await axios.post(`${API_BASE_URL}/register`, userData);
       localStorage.setItem("user", JSON.stringify(res.data));
       navigate("/dashboard");
     } catch (err) {
