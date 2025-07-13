@@ -41,6 +41,7 @@ export default function Register() {
       localStorage.setItem("user", JSON.stringify(res.data));
       navigate("/dashboard");
     } catch (err) {
+      console.error("Register failed:", err);
       setError(err.response?.data?.message || "Registration failed");
     } finally {
       setLoading(false);
