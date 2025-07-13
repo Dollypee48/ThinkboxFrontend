@@ -9,7 +9,7 @@ export default function Login() {
   const navigate = useNavigate();
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
-  const togglePassword = () => setForm((prev) => ({ ...prev, showPassword: !prev.showPassword }));
+  const togglePassword = () => setForm({ ...form, showPassword: !form.showPassword });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -46,7 +46,9 @@ export default function Login() {
           <button type="submit" className="w-full bg-purple-600 text-white py-2 rounded" disabled={loading}>
             {loading ? "Logging in..." : "Login"}
           </button>
-          <p className="text-sm text-center mt-4">Don’t have an account? <Link to="/register" className="text-purple-600">Register</Link></p>
+          <p className="text-sm text-center mt-4">
+            Don’t have an account? <Link to="/register" className="text-purple-600">Register</Link>
+          </p>
         </form>
       </div>
     </div>

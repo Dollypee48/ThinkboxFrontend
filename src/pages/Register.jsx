@@ -41,7 +41,7 @@ export default function Register() {
       localStorage.setItem("user", JSON.stringify(res.data));
       navigate("/dashboard");
     } catch (err) {
-      setError(err.response?.data?.message || "Something went wrong");
+      setError(err.response?.data?.message || "Registration failed");
     } finally {
       setLoading(false);
     }
@@ -57,9 +57,9 @@ export default function Register() {
             <input name="firstName" value={form.firstName} onChange={handleChange} placeholder="First Name" required className="border p-2 rounded" />
             <input name="lastName" value={form.lastName} onChange={handleChange} placeholder="Last Name" required className="border p-2 rounded" />
           </div>
-          <input name="email" value={form.email} onChange={handleChange} type="email" placeholder="Email" required className="w-full border p-2 rounded" />
-          <input name="password" value={form.password} onChange={handleChange} type={form.showPassword ? "text" : "password"} placeholder="Password" required className="w-full border p-2 rounded" />
-          <input name="confirmPassword" value={form.confirmPassword} onChange={handleChange} type={form.showPassword ? "text" : "password"} placeholder="Confirm Password" required className="w-full border p-2 rounded" />
+          <input name="email" type="email" value={form.email} onChange={handleChange} placeholder="Email" required className="w-full border p-2 rounded" />
+          <input name="password" type={form.showPassword ? "text" : "password"} value={form.password} onChange={handleChange} placeholder="Password" required className="w-full border p-2 rounded" />
+          <input name="confirmPassword" type={form.showPassword ? "text" : "password"} value={form.confirmPassword} onChange={handleChange} placeholder="Confirm Password" required className="w-full border p-2 rounded" />
           <label className="flex items-center text-sm">
             <input type="checkbox" checked={form.showPassword} onChange={togglePassword} className="mr-2" />
             Show Password
@@ -68,7 +68,9 @@ export default function Register() {
           <button type="submit" className="w-full bg-purple-600 text-white py-2 rounded" disabled={loading}>
             {loading ? "Registering..." : "Register"}
           </button>
-          <p className="text-sm text-center mt-4">Already have an account? <Link to="/login" className="text-purple-600">Login</Link></p>
+          <p className="text-sm text-center mt-4">
+            Already have an account? <Link to="/login" className="text-purple-600">Login</Link>
+          </p>
         </form>
       </div>
     </div>
