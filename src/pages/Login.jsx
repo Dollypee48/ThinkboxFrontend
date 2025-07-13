@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { login } from "../features/auth/authSlice";
 import { useNavigate, Link } from "react-router-dom";
+import axios from "axios";
 
 export default function Login() {
   const [form, setForm] = useState({
@@ -10,15 +9,9 @@ export default function Login() {
     showPassword: false,
   });
 
-  const dispatch = useDispatch();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
-  const { user, loading, error } = useSelector((state) => state.auth);
-
-  useEffect(() => {
-    if (user) {
-      navigate("/dashboard");
-    }
-  }, [user, navigate]);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -28,9 +21,25 @@ export default function Login() {
     setForm((prev) => ({ ...prev, showPassword: !prev.showPassword }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    dispatch(login({ email: form.email, password: form.password }));
+    setError("");
+
+    try {
+      setLoading(true);
+      const res = await axios.post("https://think-box-backend.vercel.app/api/auth/login", {
+        email: form.email.trim(),
+        password: form.password,
+      });
+
+      localStorage.setItem("user", JSON.stringify(res.data));
+      navigate("/dashboard");
+    } catch (err) {
+      console.error("Login failed:", err);
+      setError(err.response?.data?.message || "Invalid email or password.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

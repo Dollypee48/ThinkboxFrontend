@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { register } from "../features/auth/authSlice";
 import { useNavigate, Link } from "react-router-dom";
+import axios from "axios";
 
 export default function Register() {
   const [form, setForm] = useState({
@@ -13,15 +12,9 @@ export default function Register() {
     showPassword: false,
   });
 
-  const dispatch = useDispatch();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
-  const { user, loading, error } = useSelector((state) => state.auth);
-
-  useEffect(() => {
-    if (user) {
-      navigate("/dashboard");
-    }
-  }, [user, navigate]);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -31,11 +24,12 @@ export default function Register() {
     setForm({ ...form, showPassword: !form.showPassword });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
 
     if (form.password !== form.confirmPassword) {
-      alert("Passwords do not match");
+      setError("Passwords do not match");
       return;
     }
 
@@ -46,7 +40,17 @@ export default function Register() {
       password: form.password,
     };
 
-    dispatch(register(userData));
+    try {
+      setLoading(true);
+      const res = await axios.post("https://think-box-backend.vercel.app/api/auth/register", userData);
+      localStorage.setItem("user", JSON.stringify(res.data));
+      navigate("/dashboard");
+    } catch (err) {
+      console.error("Register failed:", err);
+      setError(err.response?.data?.message || "Something went wrong.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
