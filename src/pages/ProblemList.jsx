@@ -1,30 +1,19 @@
 import { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { getProblems } from "../features/problems/problemSlice";
 import { Link } from "react-router-dom";
-import axios from "axios";
-
-const API_BASE_URL = "https://think-box-backend.vercel.app";
+import { useProblem } from "../context/ProblemContext";
 
 export default function ProblemList() {
-  const dispatch = useDispatch();
-  const { problems, loading, error } = useSelector((state) => state.problems);
+  const { problems, loading, error, fetchProblems, deleteProblem } = useProblem();
 
   useEffect(() => {
-    dispatch(getProblems());
-  }, [dispatch]);
+    fetchProblems();
+  }, []);
 
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this problem?")) return;
 
     try {
-      const user = JSON.parse(localStorage.getItem("user"));
-      await axios.delete(`${API_BASE_URL}/api/problems/${id}`, {
-        headers: {
-          Authorization: `Bearer ${user.token}`,
-        },
-      });
-      dispatch(getProblems());
+      await deleteProblem(id);
     } catch (err) {
       console.error("Failed to delete:", err);
       alert("Could not delete problem. Please try again.");

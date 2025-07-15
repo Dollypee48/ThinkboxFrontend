@@ -25,20 +25,30 @@ export default function ProblemDetails() {
   const [loading, setLoading] = useState(true);
   const [editingNoteId, setEditingNoteId] = useState(null);
   const [editingText, setEditingText] = useState("");
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const fetchProblem = async () => {
       setLoading(true);
-      const data = await getProblemById(id);
-      if (!data) return setProblem(null);
-      setProblem(data);
-      setNotes(data.notes || []);
-      setEditForm({
-        title: data.title,
-        description: data.description,
-        category: data.category,
-      });
-      setLoading(false);
+      setError("");
+      try {
+        const data = await getProblemById(id);
+        if (!data) {
+          setProblem(null);
+        } else {
+          setProblem(data);
+          setNotes(data.notes || []);
+          setEditForm({
+            title: data.title,
+            description: data.description,
+            category: data.category,
+          });
+        }
+      } catch (err) {
+        setError("Failed to load problem.");
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchProblem();
@@ -51,34 +61,56 @@ export default function ProblemDetails() {
   }, [notes]);
 
   const handleSaveEdit = async () => {
-    const updated = await updateProblem(id, editForm);
-    setProblem(updated);
-    setEditMode(false);
+    if (!editForm.title.trim()) return alert("Title is required");
+    try {
+      const updated = await updateProblem(id, editForm);
+      setProblem(updated);
+      setEditMode(false);
+    } catch (err) {
+      setError("Failed to save changes");
+    }
   };
 
   const handleDelete = async () => {
     if (!window.confirm("Delete this problem?")) return;
-    await deleteProblem(id);
-    navigate("/problems");
+    try {
+      await deleteProblem(id);
+      navigate("/problems");
+    } catch (err) {
+      setError("Failed to delete problem.");
+    }
   };
 
   const handleAddNote = async () => {
     if (!newNote.trim()) return;
-    const updatedNotes = await addNoteToProblem(id, newNote);
-    setNotes(updatedNotes);
-    setNewNote("");
+    try {
+      const updatedNotes = await addNoteToProblem(id, newNote);
+      setNotes(updatedNotes);
+      setNewNote("");
+    } catch {
+      setError("Failed to add note.");
+    }
   };
 
   const handleEditNote = async (noteId) => {
-    const updatedNotes = await editNoteOnProblem(id, noteId, editingText);
-    setNotes(updatedNotes);
-    setEditingNoteId(null);
-    setEditingText("");
+    if (!editingText.trim()) return;
+    try {
+      const updatedNotes = await editNoteOnProblem(id, noteId, editingText);
+      setNotes(updatedNotes);
+      setEditingNoteId(null);
+      setEditingText("");
+    } catch {
+      setError("Failed to edit note.");
+    }
   };
 
   const handleDeleteNote = async (noteId) => {
-    const updatedNotes = await deleteNoteFromProblem(id, noteId);
-    setNotes(updatedNotes);
+    try {
+      const updatedNotes = await deleteNoteFromProblem(id, noteId);
+      setNotes(updatedNotes);
+    } catch {
+      setError("Failed to delete note.");
+    }
   };
 
   if (loading) return <p className="text-center py-20">Loading...</p>;
@@ -91,6 +123,8 @@ export default function ProblemDetails() {
         <h1 className="text-3xl font-bold text-purple-700">🧠 Problem Details</h1>
         <ExportPDF problem={problem} notes={notes} />
       </div>
+
+      {error && <p className="text-red-500 text-sm">{error}</p>}
 
       {/* Problem Info */}
       <div className="bg-white p-6 rounded shadow space-y-3">
@@ -172,7 +206,10 @@ export default function ProblemDetails() {
                       rows={3}
                     />
                     <div className="space-x-2">
-                      <button onClick={() => handleEditNote(note._id)} className="bg-green-600 text-white px-3 py-1 rounded">
+                      <button
+                        onClick={() => handleEditNote(note._id)}
+                        className="bg-green-600 text-white px-3 py-1 rounded"
+                      >
                         Save
                       </button>
                       <button
@@ -199,7 +236,10 @@ export default function ProblemDetails() {
                       >
                         Edit
                       </button>
-                      <button onClick={() => handleDeleteNote(note._id)} className="text-red-600 font-medium">
+                      <button
+                        onClick={() => handleDeleteNote(note._id)}
+                        className="text-red-600 font-medium"
+                      >
                         Delete
                       </button>
                     </div>

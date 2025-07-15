@@ -1,12 +1,12 @@
-import { useProblems } from "../context/ProblemContext";
-import { useAuth } from "../context/AuthContext";
 import { useEffect } from "react";
+import { useAuth } from "../context/AuthContext";
+import { useProblem } from "../context/ProblemContext";
 import { Link } from "react-router-dom";
 import UserLayout from "../layouts/UserLayout";
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const { problems, loading, fetchProblems } = useProblems();
+  const { problems, loading, fetchProblems } = useProblem();
 
   useEffect(() => {
     fetchProblems();

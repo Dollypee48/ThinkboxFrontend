@@ -1,12 +1,10 @@
 import { useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { createProblem } from "../features/problems/problemSlice";
 import { useNavigate } from "react-router-dom";
+import { useProblem } from "../context/ProblemContext"; 
 
 export default function ProblemForm() {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { loading, error } = useSelector((state) => state.problems);
+  const { createProblem, loading, error } = useProblem(); 
 
   const [form, setForm] = useState({
     title: "",
@@ -25,11 +23,10 @@ export default function ProblemForm() {
     if (!form.title.trim()) return alert("Title is required");
 
     try {
-      await dispatch(createProblem(form)).unwrap();
+      await createProblem(form);
       setSuccessMessage("✅ Problem submitted successfully!");
       setForm({ title: "", description: "", category: "Personal" });
 
-      // Optional delay before navigating to problems list
       setTimeout(() => {
         navigate("/problems");
       }, 1200);
