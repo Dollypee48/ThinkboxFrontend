@@ -11,7 +11,10 @@ export default function Navbar() {
   const handleLogout = () => {
     logout();
     setMenuOpen(false);
-    navigate("/");
+    setTimeout(() => {
+      navigate("/");
+    }, 0)
+    
   };
 
   const toggleMenu = () => {
